@@ -13,10 +13,13 @@ if st.button("Prediksi"):
     data = scaler.transform([[total, qty]])
     pred = model.predict(data)[0]
 
-    label = {
-        0: "Transaksi Kecil",
-        1: "Transaksi Sedang",
-        2: "Transaksi Besar"
-    }
+    cluster_label = {
+    0: "Transaksi Kecil",
+    2: "Transaksi Sedang",
+    1: "Transaksi Besar"
+}
 
-    st.success(f"Hasil Klasifikasi: {label[pred]}")
+hasil = cluster_label[cluster]
+
+
+st.success(f"Hasil Klasifikasi: {label[pred]}")
