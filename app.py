@@ -1,28 +1,30 @@
 import streamlit as st
-import joblib
-import numpy as np
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 
 st.title("Klasifikasi Transaksi Otomatis")
 
-# Load data cluster dan model
-df_cluster = pd.read_csv("TRANSAKSI_PENJUALAN_PRODUK_TOKO_BANGUNAN_SYNTHETIC.csv")  # Data asli untuk membangun centroid
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df_cluster[['Total_Harga', 'Kuantitas']])
+# Load dataset
+df_cluster = pd.read_csv("TRANSAKSI_PENJUALAN_PRODUK_TOKO_BANGUNAN_SYNTHETIC.csv")
+
+# Bersihkan nama kolom: hapus spasi, ubah ke huruf kecil, ganti spasi dengan underscore
+df_cluster.columns = df_cluster.columns.str.strip().str.replace(" ", "_").str.lower()
+# Sekarang kolom penting: 'id_transaksi', 'kuantitas', 'total_harga'
 
 # Buat KMeans untuk mendapatkan centroid
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df_cluster[['total_harga', 'kuantitas']])
+
 kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
 kmeans.fit(X_scaled)
 centroids = scaler.inverse_transform(kmeans.cluster_centers_)
 
 # Urutkan cluster berdasarkan total_harga
-cluster_order = np.argsort(centroids[:, 0])  # 0=Total_Harga
-cluster_label = {}
+cluster_order = np.argsort(centroids[:, 0])
 labels = ["Transaksi Kecil", "Transaksi Sedang", "Transaksi Besar"]
-for i, c in enumerate(cluster_order):
-    cluster_label[c] = labels[i]
+cluster_label = {c: labels[i] for i, c in enumerate(cluster_order)}
 
 # Input user
 total = st.number_input("Total Harga (Rp)", min_value=0)
@@ -40,8 +42,8 @@ if st.button("Prediksi"):
     
     st.success(f"Hasil Prediksi: {hasil}")
 
-    # Optional: tampilkan centroid untuk referensi
+    # Tampilkan centroid untuk referensi
+    centroids_df = pd.DataFrame(centroids, columns=['total_harga', 'kuantitas'])
+    centroids_df['label'] = [cluster_label[i] for i in range(len(centroids))]
     st.subheader("Centroid Cluster:")
-    centroids_df = pd.DataFrame(centroids, columns=['Total_Harga', 'Kuantitas'])
-    centroids_df['Label'] = [cluster_label[i] for i in range(len(centroids))]
     st.dataframe(centroids_df)
